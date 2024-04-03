@@ -39,5 +39,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/react": "^18.2.74",
+    "@types/react-dom": "^18.2.23",
+    "typescript": "^5.4.3"
   }
 }
