@@ -1,20 +1,21 @@
 {
   "name": "esign",
-  "version": "0.1.0",
+  "version": "0.1.0-rc.01",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.2",
+    "@testing-library/user-event": "^14.5.2",
     "bootstrap": "^5.3.3",
     "fs": "^0.0.1-security",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.0.379",
     "react": "^18.2.0",
-    "react-bootstrap": "^2.10.1",
+    "react-bootstrap": "^2.10.2",
     "react-dom": "^18.2.0",
     "react-modal": "^3.16.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^3.5.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -39,5 +40,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/react": "^18.2.74",
+    "@types/react-dom": "^18.2.23",
+    "typescript": "^4.9.5"
   }
 }
