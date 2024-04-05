@@ -9,28 +9,23 @@ type SignaturePosition = {
   height?: number;
 };
 
-type SavePDFWithSignatureProps = {
+type ESignPDFProps = {
   file: File;
   signature: File;
-  positions?: SignaturePosition[];
   className?: string;
 };
 
-function SavePDFWithSignature({
+function ESignPDF({
   file,
   signature,
-  positions: position = [
-    { page: 1, x: 100, y: 200, width: 100 },
-    { page: 1, x: 100, y: 150, width: 100 },
-    { page: 1, x: 100, y: 100, width: 100 },
-  ],
   className = "",
   ...props
-}: SavePDFWithSignatureProps) {
+}: ESignPDFProps) {
   const [pdfBytes, setPDFBytes] = useState<string | ArrayBuffer | Uint8Array>();
   const [signatureBytes, setSignatureBytes] = useState<
     string | ArrayBuffer | Uint8Array
   >();
+  const [positions, setPositions] = useState<SignaturePosition[]>([]);
 
   function getArrayBuffer(file: File): Promise<string | ArrayBuffer | null> {
     return new Promise((resolve, reject) => {
@@ -58,11 +53,19 @@ function SavePDFWithSignature({
         if (thisSignatureBytes) {
           setSignatureBytes(thisSignatureBytes);
         }
+
+        if (thisPDFBytes && thisSignatureBytes) {
+          setPositions([
+            { page: 1, x: 100, y: 200, width: 100 },
+            { page: 1, x: 100, y: 150, width: 100 },
+            { page: 1, x: 100, y: 100, width: 100 },
+          ]);
+        }
       })();
     }
   }, [file, signature]);
 
-  async function savePDFWithSignature() {
+  async function savePDFWithSigns() {
     if (pdfBytes && signatureBytes) {
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const sigImage = await pdfDoc.embedPng(signatureBytes);
@@ -70,7 +73,7 @@ function SavePDFWithSignature({
       pdfDoc.getPages().forEach((aPage, index) => {
         const { width: sigWidth, height: sigHeight } = sigImage;
 
-        position
+        positions
           .filter((p) => p.page === index + 1)
           .forEach(({ x, y, width, height }) => {
             // const { width: pageWidth, height: pageHeight } = aPage.getSize();
@@ -110,9 +113,9 @@ function SavePDFWithSignature({
 
   return (
     <div className={`${className}`} {...props}>
-      <button onClick={savePDFWithSignature}>Save</button>
+      <button onClick={savePDFWithSigns}>Save</button>
     </div>
   );
 }
 
-export default SavePDFWithSignature;
+export default ESignPDF;
