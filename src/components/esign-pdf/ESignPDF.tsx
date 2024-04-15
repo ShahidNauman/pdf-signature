@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
-
-type SignaturePosition = {
-  page: number;
-  x: number;
-  y: number;
-  width: number;
-  height?: number;
-};
+import PDFEditor from "./PDFEditor";
+import { SignaturePosition } from "./esign-pdf-types";
 
 type ESignPDFProps = {
   file: File;
@@ -114,6 +108,7 @@ function ESignPDF({
   return (
     <div className={`${className}`} {...props}>
       <button onClick={savePDFWithSigns}>Save</button>
+      <PDFEditor file={file} signature={signature} positions={positions} />
     </div>
   );
 }

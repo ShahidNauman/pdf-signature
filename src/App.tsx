@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import ESignPDF from "./components/ESignPDF";
+import ESignPDF from "./components/esign-pdf/ESignPDF";
 import Header from "./components/Header";
-import PDFViewer from "./components/PDFViewer";
+// import PDFViewer from "./components/PDFViewer";
 import FileUploader from "./FileUploader";
 import "./App.css";
 
@@ -44,7 +44,7 @@ function App() {
       {selectedFile && selectedSignature && (
         <>
           <ESignPDF file={selectedFile} signature={selectedSignature} />
-          <PDFViewer file={selectedFile} signatureImage={signatureImageUrl} />
+          {/* <PDFViewer file={selectedFile} signatureImage={signatureImageUrl} /> */}
         </>
       )}
     </div>
