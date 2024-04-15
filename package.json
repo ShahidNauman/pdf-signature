@@ -9,6 +9,7 @@
     "bootstrap": "^5.3.3",
     "fs": "^0.0.1-security",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.1.392",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.2",
     "react-dom": "^18.2.0",
