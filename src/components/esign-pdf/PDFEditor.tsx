@@ -27,7 +27,7 @@ async function getPositions(
       positions.push({
         page: 1,
         x: fieldPosition.x,
-        y: pdfDoc.getPage(0).getHeight() - fieldPosition.y - 50,
+        y: pdfDoc.getPage(0).getHeight() - fieldPosition.y - 40,
         width: fieldPosition.width,
         height: fieldPosition.height,
       });
@@ -41,6 +41,7 @@ type PDFEditorProps = {
   file: File;
   signature: File;
   positions?: SignaturePosition[];
+  onPositionChange?: (positions: SignaturePosition[]) => void;
   className?: string;
 };
 
@@ -48,11 +49,11 @@ function PDFEditor({
   file,
   signature,
   positions = [],
+  onPositionChange,
   className = "",
   ...props
 }: PDFEditorProps) {
   const [pdfDoc, setPdfDoc] = useState<PDFDocument>();
-  const [thisPositions, setThisPositions] = useState<SignaturePosition[]>([]);
 
   useEffect(() => {
     if (file) {
@@ -60,10 +61,10 @@ function PDFEditor({
         const pdfBytes = await file.arrayBuffer();
         const thisPdfDoc = await PDFDocument.load(pdfBytes);
         setPdfDoc(thisPdfDoc);
-        setThisPositions(await getPositions(thisPdfDoc, "sign"));
+        onPositionChange?.(await getPositions(thisPdfDoc, "sign"));
       })();
     }
-  }, [file]);
+  }, [file, onPositionChange]);
 
   if (!file) return <></>;
 
@@ -79,7 +80,7 @@ function PDFEditor({
         >
           <SignatureCanvas
             signature={signature}
-            positions={thisPositions.filter((p) => p.page === index + 1)}
+            positions={positions.filter((p) => p.page === index + 1)}
             width={page.getWidth()}
             height={page.getHeight()}
             className="overlay-canvas"
