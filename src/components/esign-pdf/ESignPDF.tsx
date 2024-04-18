@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
+import React, { useEffect, useState } from "react";
+import type { SignaturePosition } from "./esign-pdf-types";
 import PDFEditor from "./PDFEditor";
-import { SignaturePosition } from "./esign-pdf-types";
+import "./ESignPDF.css";
 
 type ESignPDFProps = {
   file: File;

@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
 import ESignPDF from "./components/esign-pdf/ESignPDF";
-import Header from "./components/Header";
-// import PDFViewer from "./components/PDFViewer";
 import FileUploader from "./FileUploader";
-import "./App.css";
 
 // const signatureImageUrl =
 //   "https://www.signwell.com/assets/vip-signatures/muhammad-ali-signature-3f9237f6fc48c3a04ba083117948e16ee7968aae521ae4ccebdfb8f22596ad22.svg";
@@ -38,14 +34,10 @@ function App() {
   }, [selectedFile]);
 
   return (
-    <div className="App">
-      <Header />
+    <div>
       <FileUploader onFileSelect={setSelectedFile} />
       {selectedFile && selectedSignature && (
-        <>
-          <ESignPDF file={selectedFile} signature={selectedSignature} />
-          {/* <PDFViewer file={selectedFile} signatureImage={signatureImageUrl} /> */}
-        </>
+        <ESignPDF file={selectedFile} signature={selectedSignature} />
       )}
     </div>
   );

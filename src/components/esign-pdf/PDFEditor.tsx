@@ -1,61 +1,38 @@
 import { PDFDocument } from "pdf-lib";
 import React, { useEffect, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { DocumentCallback } from "react-pdf/dist/cjs/shared/types";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { SignaturePosition } from "./esign-pdf-types";
-import { PDFDocumentProxy, getDocument } from "pdfjs-dist";
+import type { SignFieldPosition, SignaturePosition } from "./esign-pdf-types";
+import SignatureCanvas from "./SignatureCanvas";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
-function getArrayBuffer(file: File): ArrayBuffer {
-  const reader = new FileReader();
-  reader.readAsArrayBuffer(file);
-  return reader.result as ArrayBuffer;
-}
-
 async function getPositions(
-  pdfDoc: PDFDocumentProxy,
+  pdfDoc: PDFDocument,
   keyword: string
-): Promise<SignaturePosition[]> {
-  const positions: SignaturePosition[] = [];
+): Promise<SignFieldPosition[]> {
+  const positions: SignFieldPosition[] = [];
 
-  // for (let i = 1; i <= pdfDoc.numPages; i++) {
-  //   const page = await pdfDoc.getPage(i);
-  //   const viewport = page.getViewport({ scale });
-  //   const canvas = document.createElement("canvas");
-  //   const context = canvas.getContext("2d");
-  //   canvas.height = viewport.height;
-  //   canvas.width = viewport.width;
-  //   const renderContext = { canvasContext: context, viewport };
-  //   await page.render(renderContext).promise;
-  //   containerRef.current.appendChild(canvas);
+  const form = pdfDoc.getForm();
+  const fields = form.getFields();
 
-  //   const annotations = await page.getAnnotations();
-  //   annotations.forEach((annotation) => {
-  //     if (annotation.subtype === "Widget") {
-  //       const fieldName = annotation.fieldName
-  //         ? annotation.fieldName.toLowerCase()
-  //         : "";
-  //       const fieldType = annotation.fieldType;
-  //       if (fieldName.includes("signature") || fieldType === "Widget") {
-  //         drawRectangle(annotation.rect, context, viewport, "black", 2);
-  //         drawSignatureImage(
-  //           signatureImage,
-  //           canvas,
-  //           annotation.rect,
-  //           viewport,
-  //           context
-  //         );
-  //       } else if (fieldType === "Tx" || fieldType === "Widget") {
-  //         drawRectangle(annotation.rect, context, viewport, "red", 2);
-  //       }
-  //     }
-  //     pageNumber(canvas, i);
-  //     canvas.classList.add("pdf-page");
-  //   });
-  // }
+  // Get the positions of all text fields
+  fields.forEach((field) => {
+    const widgets = field.acroField.getWidgets();
+    const firstWidget = widgets[0]; // Assuming the field has at least one widget
+    const fieldPosition = firstWidget.getRectangle();
+
+    if (field.getName().toLowerCase().includes(keyword.toLowerCase())) {
+      positions.push({
+        page: 1,
+        x: fieldPosition.x,
+        y: pdfDoc.getPage(0).getHeight() - fieldPosition.y - 50,
+        width: fieldPosition.width,
+        height: fieldPosition.height,
+      });
+    }
+  });
 
   return positions;
 }
@@ -63,52 +40,51 @@ async function getPositions(
 type PDFEditorProps = {
   file: File;
   signature: File;
-  positions: SignaturePosition[];
+  positions?: SignaturePosition[];
   className?: string;
 };
 
 function PDFEditor({
   file,
   signature,
-  positions: temp,
+  positions = [],
   className = "",
   ...props
 }: PDFEditorProps) {
-  const [totalPages, setTotalPages] = useState<number>(0);
-  const [positions, setPositions] = useState<SignaturePosition[]>([]);
+  const [pdfDoc, setPdfDoc] = useState<PDFDocument>();
+  const [thisPositions, setThisPositions] = useState<SignaturePosition[]>([]);
 
   useEffect(() => {
     if (file) {
       (async () => {
-        const pdfData = await file.arrayBuffer();
-        const pdfDoc = await getDocument(pdfData).promise;
-        const thisPositions = await getPositions(pdfDoc, "sign");
-        setPositions(thisPositions);
+        const pdfBytes = await file.arrayBuffer();
+        const thisPdfDoc = await PDFDocument.load(pdfBytes);
+        setPdfDoc(thisPdfDoc);
+        setThisPositions(await getPositions(thisPdfDoc, "sign"));
       })();
     }
   }, [file]);
 
-  function onDocumentLoadSuccess({ numPages }: DocumentCallback) {
-    setTotalPages(numPages);
-  }
-
   if (!file) return <></>;
 
   return (
-    <Document
-      file={file}
-      onLoadSuccess={onDocumentLoadSuccess}
-      className={className}
-      {...props}
-    >
-      {Array.from(new Array(totalPages), (_, index) => (
+    <Document file={file} className={className} {...props}>
+      {pdfDoc?.getPages().map((page, index) => (
         <Page
-          key={`page_${index + 1}`}
+          key={`page_${index}`}
           pageNumber={index + 1}
-          scale={1.5}
           renderAnnotationLayer={false}
           renderTextLayer={false}
-        />
+          className="pdf-page"
+        >
+          <SignatureCanvas
+            signature={signature}
+            positions={thisPositions.filter((p) => p.page === index + 1)}
+            width={page.getWidth()}
+            height={page.getHeight()}
+            className="overlay-canvas"
+          />
+        </Page>
       ))}
     </Document>
   );
