@@ -23,10 +23,24 @@ function ESignPDF({
     const signatureBytes = await signature.arrayBuffer();
     if (pdfBytes && signatureBytes) {
       const pdfDoc = await PDFDocument.load(pdfBytes);
-      const sigImage = await pdfDoc.embedPng(signatureBytes);
+      const signImage = await pdfDoc.embedPng(signatureBytes);
 
       positions.forEach(({ page, x, y, width, height }) => {
-        pdfDoc.getPage(page - 1).drawImage(sigImage, { x, y, width, height });
+        const { width: signWidth, height: signHeight } = signImage;
+
+        let thisHeight = height || (width / signWidth) * signHeight;
+        thisHeight = thisHeight < 50 ? 50 : thisHeight;
+
+        const thisScale = width / thisHeight;
+        const scaledWidth = signHeight / thisScale;
+        const thisX = x + (width - scaledWidth) / 2;
+
+        pdfDoc.getPage(page - 1).drawImage(signImage, {
+          x: thisX,
+          y,
+          width: scaledWidth,
+          height: thisHeight,
+        });
       });
 
       const savedPDFBytes = await pdfDoc.save();

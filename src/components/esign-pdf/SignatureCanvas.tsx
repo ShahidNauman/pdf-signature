@@ -25,16 +25,22 @@ function SignatureCanvas({
       const ctx = canvas.getContext("2d");
 
       if (ctx) {
-        const sigImage = new Image();
-        sigImage.src = URL.createObjectURL(signature);
-        sigImage.onload = () => {
+        const signImage = new Image();
+        signImage.src = URL.createObjectURL(signature);
+        signImage.onload = () => {
           positions.forEach(
             ({ x, y, width: thisWidth, height: thisHeight }) => {
-              // Scale the sigImage to fit inside thisWidth and thisHeight
-              const thisAspectRatio = thisWidth / (thisHeight || 0);
-              const scaledWidth = sigImage.width / thisAspectRatio;
-              const scaledHeight = sigImage.height / thisAspectRatio;
-              ctx.drawImage(sigImage, x, y, scaledWidth, scaledHeight);
+              const { width: signWidth, height: signHeight } = signImage;
+
+              thisHeight = thisHeight || (thisWidth / signWidth) * signHeight;
+              thisHeight = thisHeight < 50 ? 50 : thisHeight;
+
+              const thisScale = thisWidth / thisHeight;
+              const scaledWidth = signHeight / thisScale;
+              const thisX = x + (thisWidth - scaledWidth) / 2;
+              const thisY = canvas.height - y - thisHeight;
+
+              ctx.drawImage(signImage, thisX, thisY, scaledWidth, thisHeight);
             }
           );
         };

@@ -27,7 +27,7 @@ async function getPositions(
       positions.push({
         page: 1,
         x: fieldPosition.x,
-        y: pdfDoc.getPage(0).getHeight() - fieldPosition.y - 40,
+        y: fieldPosition.y,
         width: fieldPosition.width,
         height: fieldPosition.height,
       });
