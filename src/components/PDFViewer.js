@@ -172,7 +172,7 @@ const PDFViewer = ({ file, signatureImage }) => {
         canvas.classList.add("pdf-page");
       });
     }
-  }, [file, scale, signatureImage, drawRectangle, drawSignatureImage]);
+  }, [file, scale, signatureImage, drawRectangle, drawSignatureImage, pageNumber]);
 
   useEffect(() => {
     renderPDF();
