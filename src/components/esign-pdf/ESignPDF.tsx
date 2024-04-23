@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib";
-import React, { useState } from "react";
-import type { SignaturePosition } from "./esign-pdf-types";
+import React, { useEffect, useState } from "react";
+import type { SignatureField, SignaturePosition } from "./esign-pdf-types";
 import PDFEditor from "./PDFEditor";
 import "./ESignPDF.css";
 
@@ -16,31 +16,84 @@ function ESignPDF({
   className = "",
   ...props
 }: ESignPDFProps) {
-  const [positions, setPositions] = useState<SignaturePosition[]>([]);
+  const [signaturePositions, setSignaturePositions] = useState<
+    SignaturePosition[]
+  >([]);
 
-  async function savePDFWithSigns() {
+  useEffect(() => {
+    if (file) {
+      (async function () {
+        const signatureFields = await getSignatureFields(file, "sign");
+
+        const signImage = new Image();
+        signImage.src = URL.createObjectURL(signature);
+        signImage.onload = (e) => {
+          const { width: signWidth, height: signHeight } =
+            e.target as HTMLImageElement;
+
+          setSignaturePositions(
+            signatureFields.map(({ page, x, y, width, height }) => {
+              const scaledHeight = height < 50 ? 50 : height;
+              const scaledWidth = (scaledHeight * signWidth) / signHeight;
+
+              return {
+                page,
+                x: x + (width - scaledWidth) / 2,
+                y,
+                width: scaledWidth,
+                height: scaledHeight,
+              };
+            })
+          );
+        };
+      })();
+    }
+  }, [file, signature]);
+
+  async function getSignatureFields(
+    file: File,
+    keyword: string
+  ): Promise<SignatureField[]> {
+    const pdfBytes = await file.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+
+    const fieldPositions: SignatureField[] = [];
+
+    const form = pdfDoc.getForm();
+    const fields = form.getFields();
+
+    // Get the positions of all text fields
+    fields.forEach((field) => {
+      const widgets = field.acroField.getWidgets();
+      const firstWidget = widgets[0]; // Assuming the field has at least one widget
+      const fieldPosition = firstWidget.getRectangle();
+
+      if (field.getName().toLowerCase().includes(keyword.toLowerCase())) {
+        fieldPositions.push({ ...fieldPosition, page: 1, field });
+      }
+    });
+
+    return fieldPositions;
+  }
+
+  async function savePDFWithSignatures() {
     const pdfBytes = await file.arrayBuffer();
     const signatureBytes = await signature.arrayBuffer();
     if (pdfBytes && signatureBytes) {
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const signImage = await pdfDoc.embedPng(signatureBytes);
 
-      positions.forEach(({ page, x, y, width, height }) => {
-        const { width: signWidth, height: signHeight } = signImage;
+      // TODO: Refine this logic later on.
+      const form = pdfDoc.getForm();
+      const fields = form.getFields();
+      fields.forEach((field) => {
+        if (field.getName().toLowerCase().includes("sign")) {
+          field.enableReadOnly();
+        }
+      });
 
-        let thisHeight = height || (width / signWidth) * signHeight;
-        thisHeight = thisHeight < 50 ? 50 : thisHeight;
-
-        const thisScale = width / thisHeight;
-        const scaledWidth = signHeight / thisScale;
-        const thisX = x + (width - scaledWidth) / 2;
-
-        pdfDoc.getPage(page - 1).drawImage(signImage, {
-          x: thisX,
-          y,
-          width: scaledWidth,
-          height: thisHeight,
-        });
+      signaturePositions.forEach(({ page, x, y, width, height }) => {
+        pdfDoc.getPage(page - 1).drawImage(signImage, { x, y, width, height });
       });
 
       const savedPDFBytes = await pdfDoc.save();
@@ -58,12 +111,12 @@ function ESignPDF({
 
   return (
     <div className={`${className}`} {...props}>
-      <button onClick={savePDFWithSigns}>Save</button>
+      <button onClick={savePDFWithSignatures}>Save</button>
       <PDFEditor
         file={file}
         signature={signature}
-        positions={positions}
-        onPositionChange={setPositions}
+        positions={signaturePositions}
+        onPositionsChange={setSignaturePositions}
       />
     </div>
   );

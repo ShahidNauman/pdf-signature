@@ -3,45 +3,16 @@ import React, { useEffect, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import type { SignFieldPosition, SignaturePosition } from "./esign-pdf-types";
+import type { SignaturePosition } from "./esign-pdf-types";
 import SignatureCanvas from "./SignatureCanvas";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-
-async function getPositions(
-  pdfDoc: PDFDocument,
-  keyword: string
-): Promise<SignFieldPosition[]> {
-  const positions: SignFieldPosition[] = [];
-
-  const form = pdfDoc.getForm();
-  const fields = form.getFields();
-
-  // Get the positions of all text fields
-  fields.forEach((field) => {
-    const widgets = field.acroField.getWidgets();
-    const firstWidget = widgets[0]; // Assuming the field has at least one widget
-    const fieldPosition = firstWidget.getRectangle();
-
-    if (field.getName().toLowerCase().includes(keyword.toLowerCase())) {
-      positions.push({
-        page: 1,
-        x: fieldPosition.x,
-        y: fieldPosition.y,
-        width: fieldPosition.width,
-        height: fieldPosition.height,
-      });
-    }
-  });
-
-  return positions;
-}
 
 type PDFEditorProps = {
   file: File;
   signature: File;
   positions?: SignaturePosition[];
-  onPositionChange?: (positions: SignaturePosition[]) => void;
+  onPositionsChange?: (positions: SignaturePosition[]) => void;
   className?: string;
 };
 
@@ -49,7 +20,7 @@ function PDFEditor({
   file,
   signature,
   positions = [],
-  onPositionChange,
+  onPositionsChange,
   className = "",
   ...props
 }: PDFEditorProps) {
@@ -61,10 +32,9 @@ function PDFEditor({
         const pdfBytes = await file.arrayBuffer();
         const thisPdfDoc = await PDFDocument.load(pdfBytes);
         setPdfDoc(thisPdfDoc);
-        onPositionChange?.(await getPositions(thisPdfDoc, "sign"));
       })();
     }
-  }, [file, onPositionChange]);
+  }, [file]);
 
   if (!file) return <></>;
 
@@ -83,6 +53,11 @@ function PDFEditor({
             positions={positions.filter((p) => p.page === index + 1)}
             width={page.getWidth()}
             height={page.getHeight()}
+            onPositionsChange={(positions) =>
+              onPositionsChange?.(
+                positions.map((p) => ({ ...p, page: index + 1 }))
+              )
+            }
             className="overlay-canvas"
           />
         </Page>

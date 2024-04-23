@@ -1,61 +1,45 @@
-import React, { useEffect, useRef } from "react";
-import type { SignaturePosition } from "./esign-pdf-types";
+import React from "react";
+import type { Position } from "./esign-pdf-types";
 
 type SignatureCanvasProps = {
   signature: File;
-  positions: SignaturePosition[];
+  positions: Position[];
   width?: number;
   height?: number;
+  onPositionsChange?: (positions: Position[]) => void;
   className?: string;
 };
 
 function SignatureCanvas({
   signature,
   positions,
-  width,
-  height,
+  width: pageWidth,
+  height: pageHeight,
+  onPositionsChange,
   className = "",
   ...props
 }: SignatureCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-
-      if (ctx) {
-        const signImage = new Image();
-        signImage.src = URL.createObjectURL(signature);
-        signImage.onload = () => {
-          positions.forEach(
-            ({ x, y, width: thisWidth, height: thisHeight }) => {
-              const { width: signWidth, height: signHeight } = signImage;
-
-              thisHeight = thisHeight || (thisWidth / signWidth) * signHeight;
-              thisHeight = thisHeight < 50 ? 50 : thisHeight;
-
-              const thisScale = thisWidth / thisHeight;
-              const scaledWidth = signHeight / thisScale;
-              const thisX = x + (thisWidth - scaledWidth) / 2;
-              const thisY = canvas.height - y - thisHeight;
-
-              ctx.drawImage(signImage, thisX, thisY, scaledWidth, thisHeight);
-            }
-          );
-        };
-      }
-    }
-  }, [signature, positions]);
-
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
+    <div
       className={`${className}`}
+      style={{ position: "relative", width: pageWidth, height: pageHeight }}
       {...props}
-    />
+    >
+      {positions?.map(({ x, y, width, height }, index) => (
+        <img
+          key={"sign_" + index}
+          src={URL.createObjectURL(signature)}
+          alt=""
+          width={width}
+          height={height}
+          style={{
+            position: "absolute",
+            left: x,
+            bottom: y,
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
