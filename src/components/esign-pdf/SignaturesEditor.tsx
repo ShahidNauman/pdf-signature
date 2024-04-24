@@ -1,7 +1,8 @@
 import React from "react";
 import type { Position } from "./esign-pdf-types";
+import Signature from "./Signature";
 
-type SignatureCanvasProps = {
+type SignaturesEditorProps = {
   signature: File;
   positions: Position[];
   width?: number;
@@ -10,7 +11,7 @@ type SignatureCanvasProps = {
   className?: string;
 };
 
-function SignatureCanvas({
+function SignaturesEditor({
   signature,
   positions,
   width: pageWidth,
@@ -18,29 +19,22 @@ function SignatureCanvas({
   onPositionsChange,
   className = "",
   ...props
-}: SignatureCanvasProps) {
+}: SignaturesEditorProps) {
   return (
     <div
       className={`${className}`}
       style={{ position: "relative", width: pageWidth, height: pageHeight }}
       {...props}
     >
-      {positions?.map(({ x, y, width, height }, index) => (
-        <img
+      {positions?.map((aPosition, index) => (
+        <Signature
           key={"sign_" + index}
-          src={URL.createObjectURL(signature)}
-          alt=""
-          width={width}
-          height={height}
-          style={{
-            position: "absolute",
-            left: x,
-            bottom: y,
-          }}
+          signature={signature}
+          position={aPosition}
         />
       ))}
     </div>
   );
 }
 
-export default SignatureCanvas;
+export default SignaturesEditor;

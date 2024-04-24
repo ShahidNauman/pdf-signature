@@ -4,7 +4,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import type { SignaturePosition } from "./esign-pdf-types";
-import SignatureCanvas from "./SignatureCanvas";
+import SignaturesEditor from "./SignaturesEditor";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
@@ -48,7 +48,7 @@ function PDFEditor({
           renderTextLayer={false}
           className="pdf-page"
         >
-          <SignatureCanvas
+          <SignaturesEditor
             signature={signature}
             positions={positions.filter((p) => p.page === index + 1)}
             width={page.getWidth()}
