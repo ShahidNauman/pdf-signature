@@ -1,5 +1,7 @@
-import React from "react";
+import React, { SyntheticEvent } from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+import { Resizable, ResizeCallbackData } from "react-resizable";
+import "react-resizable/css/styles.css";
 import { Position } from "./esignpdf-types";
 
 type SignatureProps = {
@@ -17,16 +19,33 @@ function Signature({ signature, position, onPositionChange }: SignatureProps) {
     });
   }
 
+  function handleResize(
+    _e: SyntheticEvent<Element, Event>,
+    data: ResizeCallbackData
+  ) {
+    onPositionChange?.({
+      ...position,
+      width: data.size.width,
+      height: data.size.height,
+    });
+  }
+
   return (
     <Draggable onStop={handleMove}>
-      <div style={{ ...position, position: "absolute" }}>
-        <img
-          src={URL.createObjectURL(signature)}
-          alt=""
-          width={"100%"}
-          height={"100%"}
-        />
-      </div>
+      <Resizable
+        width={position.width}
+        height={position.height}
+        onResize={handleResize}
+      >
+        <div style={{ ...position, position: "absolute" }}>
+          <img
+            src={URL.createObjectURL(signature)}
+            alt=""
+            width={"100%"}
+            height={"100%"}
+          />
+        </div>
+      </Resizable>
     </Draggable>
   );
 }
