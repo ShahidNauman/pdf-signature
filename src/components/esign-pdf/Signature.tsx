@@ -1,24 +1,25 @@
 import React from "react";
-import Draggable from "react-draggable";
-import { Position } from "./esign-pdf-types";
+import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+import { Position } from "./esignpdf-types";
 
 type SignatureProps = {
   signature: File;
   position: Position;
+  onPositionChange?: (position: Position) => void;
 };
 
-function Signature({ signature, position }: SignatureProps) {
+function Signature({ signature, position, onPositionChange }: SignatureProps) {
+  function handleMove(_e: DraggableEvent, data: DraggableData): false | void {
+    onPositionChange?.({
+      ...position,
+      translateX: data.lastX,
+      translateY: data.lastY,
+    });
+  }
+
   return (
-    <Draggable>
-      <div
-        style={{
-          position: "absolute",
-          left: position.x,
-          bottom: position.y,
-          width: position.width,
-          height: position.height,
-        }}
-      >
+    <Draggable onStop={handleMove}>
+      <div style={{ ...position, position: "absolute" }}>
         <img
           src={URL.createObjectURL(signature)}
           alt=""

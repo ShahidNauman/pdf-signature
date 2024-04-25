@@ -1,6 +1,6 @@
 import React from "react";
-import type { Position } from "./esign-pdf-types";
 import Signature from "./Signature";
+import type { Position } from "./esignpdf-types";
 
 type SignaturesEditorProps = {
   signature: File;
@@ -31,6 +31,11 @@ function SignaturesEditor({
           key={"sign_" + index}
           signature={signature}
           position={aPosition}
+          onPositionChange={(p) => {
+            const newPositions = [...positions];
+            newPositions[index] = p;
+            onPositionsChange?.(newPositions);
+          }}
         />
       ))}
     </div>

@@ -1,8 +1,9 @@
 import { PDFDocument } from "pdf-lib";
 import React, { useEffect, useState } from "react";
-import type { SignatureField, SignaturePosition } from "./esign-pdf-types";
 import PDFEditor from "./PDFEditor";
-import "./ESignPDF.css";
+import { getSignatureFields } from "./esignpdf-helpers";
+import type { SignaturePosition } from "./esignpdf-types";
+import "./esignpdf-styles.css";
 
 type ESignPDFProps = {
   file: File;
@@ -32,14 +33,14 @@ function ESignPDF({
             e.target as HTMLImageElement;
 
           setSignaturePositions(
-            signatureFields.map(({ page, x, y, width, height }) => {
+            signatureFields.map(({ page, left, top, width, height }) => {
               const scaledHeight = height < 50 ? 50 : height;
               const scaledWidth = (scaledHeight * signWidth) / signHeight;
 
               return {
                 page,
-                x: x + (width - scaledWidth) / 2,
-                y,
+                left: left + (width - scaledWidth) / 2,
+                top: top + height - scaledHeight,
                 width: scaledWidth,
                 height: scaledHeight,
               };
@@ -49,32 +50,6 @@ function ESignPDF({
       })();
     }
   }, [file, signature]);
-
-  async function getSignatureFields(
-    file: File,
-    keyword: string
-  ): Promise<SignatureField[]> {
-    const pdfBytes = await file.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-
-    const fieldPositions: SignatureField[] = [];
-
-    const form = pdfDoc.getForm();
-    const fields = form.getFields();
-
-    // Get the positions of all text fields
-    fields.forEach((field) => {
-      const widgets = field.acroField.getWidgets();
-      const firstWidget = widgets[0]; // Assuming the field has at least one widget
-      const fieldPosition = firstWidget.getRectangle();
-
-      if (field.getName().toLowerCase().includes(keyword.toLowerCase())) {
-        fieldPositions.push({ ...fieldPosition, page: 1, field });
-      }
-    });
-
-    return fieldPositions;
-  }
 
   async function savePDFWithSignatures() {
     const pdfBytes = await file.arrayBuffer();
@@ -92,9 +67,17 @@ function ESignPDF({
         }
       });
 
-      signaturePositions.forEach(({ page, x, y, width, height }) => {
-        pdfDoc.getPage(page - 1).drawImage(signImage, { x, y, width, height });
-      });
+      const pageHeight = pdfDoc.getPage(0).getHeight();
+      signaturePositions.forEach(
+        ({ page, left, top, width, height, translateX, translateY }) => {
+          pdfDoc.getPage(page - 1).drawImage(signImage, {
+            x: left + (translateX || 0),
+            y: pageHeight - (top + height + (translateY || 0)),
+            width,
+            height,
+          });
+        }
+      );
 
       const savedPDFBytes = await pdfDoc.save();
 

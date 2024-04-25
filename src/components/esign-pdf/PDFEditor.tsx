@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import type { SignaturePosition } from "./esign-pdf-types";
 import SignaturesEditor from "./SignaturesEditor";
+import type { SignaturePosition } from "./esignpdf-types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
@@ -53,10 +53,11 @@ function PDFEditor({
             positions={positions.filter((p) => p.page === index + 1)}
             width={page.getWidth()}
             height={page.getHeight()}
-            onPositionsChange={(positions) =>
-              onPositionsChange?.(
-                positions.map((p) => ({ ...p, page: index + 1 }))
-              )
+            onPositionsChange={(p) =>
+              onPositionsChange?.([
+                ...positions.filter((p) => p.page !== index + 1),
+                ...p.map((p) => ({ ...p, page: index + 1 })),
+              ])
             }
             className="overlay-canvas"
           />
