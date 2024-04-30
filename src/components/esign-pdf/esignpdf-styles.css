@@ -1,0 +1,18 @@
+.pdf-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pdf-page canvas:not(.overlay-canvas) {
+  margin: 0;
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+}
+
+.overlay-canvas {
+  position: absolute !important;
+}
